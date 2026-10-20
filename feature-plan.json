@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "current_feature": "core-ast-parser",
+  "features": [
+    {
+      "id": "core-ast-parser",
+      "title": "Core AST Parser with Language Plugins",
+      "status": "done",
+      "acceptance": [
+        "Parse Python, JavaScript, TypeScript files into AST nodes",
+        "Extract imports, functions, classes, and their relationships",
+        "Output deterministic graph edges (calls, imports, inheritance)",
+        "No LLM required - fully offline deterministic parsing"
+      ],
+      "implementation": [
+        "backend/app/services/parser.py",
+        "backend/app/models/graph.py",
+        "backend/app/models/database.py"
+      ],
+      "tests": [
+        "backend/tests/test_parser.py",
+        "backend/tests/test_graph_api.py"
+      ]
+    },
+    {
+      "id": "graph-storage",
+      "title": "Graph Storage & Query API",
+      "status": "done",
+      "acceptance": [
+        "SQLite-backed persistent graph storage",
+        "REST API for querying nodes/edges with pagination/filtering",
+        "Export to GraphML, JSON, DOT formats"
+      ],
+      "implementation": [
+        "backend/app/services/graph.py",
+        "backend/app/api/graph.py",
+        "backend/app/api/parse.py"
+      ],
+      "tests": [
+        "backend/tests/test_graph_api.py"
+      ]
+    },
+    {
+      "id": "web-ui",
+      "title": "React Web UI for Graph Exploration",
+      "status": "done",
+      "acceptance": [
+        "Dashboard showing codebase overview stats",
+        "Interactive graph visualization (cytoscape.js)",
+        "Search/filter nodes by type, name, file",
+        "Node detail panel with source location"
+      ],
+      "implementation": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Dashboard.tsx",
+        "frontend/src/components/GraphView.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "tests": [
+        "frontend/typecheck via tsc"
+      ]
+    },
+    {
+      "id": "cli-skill",
+      "title": "CLI /graphify Skill Integration",
+      "status": "planned",
+      "acceptance": [
+        "CLI command to parse a directory and output graph",
+        "Integration with Claude Code, Cursor, Codex, Gemini CLI",
+        "Configurable output formats"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "sql-config-parsers",
+      "title": "SQL Schema & Config File Parsers",
+      "status": "planned",
+      "acceptance": [
+        "Parse SQL DDL for tables, columns, FK relationships",
+        "Parse YAML/JSON/TOML configs as structured nodes",
+        "Extract relationships from config references"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "pdf-doc-parser",
+      "title": "PDF Documentation Parser",
+      "status": "planned",
+      "acceptance": [
+        "Extract text/structure from PDF docs",
+        "Link doc sections to code symbols",
+        "Output as graph nodes with source references"
+      ],
+      "implementation": [],
+      "tests": []
+    }
+  ]
+}
