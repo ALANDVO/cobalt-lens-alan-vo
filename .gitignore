@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+.env
+*.db
+*.sqlite
+
+# Node
+node_modules/
+dist/
+build/
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Build
+*.egg-info/
+dist/
+
+# Local agent metadata
+.antigravitycli/
+.omp/

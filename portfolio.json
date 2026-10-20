@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "cobalt-lens-alan-vo",
+  "owner": "ALANDVO",
+  "email": "alanvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: cobalt-lens-alan-vo",
+  "workflows": [
+    "Parse any Python/JS/TS codebase into a queryable graph of imports, calls, and inheritance",
+    "Explore code structure interactively via web UI with search, filter, and node details",
+    "Export graphs as JSON, GraphML, or DOT for downstream analysis tools"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "status": "work-in-progress"
+}
