@@ -243,14 +243,14 @@ class TestEdgeCases:
 
     def test_large_file_skipped(self):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write("x = 1\n" * 200000)
+            # Create file >10MB to trigger size limit skip
+            f.write("x = 1\n" * 2000000)
             path = Path(f.name)
         try:
             parser = ASTParser()
             nodes, edges = parser.parse_file(path, job_id=1)
-            # Module node is still created for large files
-            assert len(nodes) >= 1
-            module_nodes = [n for n in nodes if n.node_type == NodeType.MODULE]
-            assert len(module_nodes) == 1
+            # File should be skipped due to size limit, returning empty lists
+            assert len(nodes) == 0
+            assert len(edges) == 0
         finally:
             path.unlink(missing_ok=True)

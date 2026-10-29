@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.0.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
@@ -23,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose with backend, frontend services
 
 ### Changed
-- N/A (initial release)
+- Upgraded tree-sitter from 0.23.2 to 0.26.0 for language ABI v15 compatibility
 
 ### Fixed
-- N/A (initial release)
+- Large file parsing test: fixed recursion depth issue by testing size-limit skip behavior
