@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.1.1 — 2026-11-05
+
+### Fixed
+- Test database initialization: `init_db()` now called in test client fixture (`backend/tests/test_graph_api.py`)
+- All 30 backend tests pass (12 parser + 18 graph API)
+- Frontend builds successfully
+- Updated `run_tests.sh` to run full test suite
+
 ## 1.1.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
