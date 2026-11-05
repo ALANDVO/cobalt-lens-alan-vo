@@ -14,6 +14,7 @@ from app.models.graph import NodeCreate, EdgeCreate, NodeType, EdgeType
 @pytest.fixture
 def client():
     app = create_app()
+    init_db()  # Ensure DB schema exists for tests
     return TestClient(app)
 
 
