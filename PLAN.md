@@ -76,3 +76,6 @@ Acceptance:
 - Link doc sections to code symbols
 - Output as graph nodes with source references
 
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

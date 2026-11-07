@@ -181,3 +181,7 @@ MIT License - Copyright (c) 2024 Alan Vo <alanvo@gmail.com>
 ## Portfolio
 
 This project is part of the Alan Vo AI/ML portfolio.
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

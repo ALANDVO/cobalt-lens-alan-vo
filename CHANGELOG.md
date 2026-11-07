@@ -43,3 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Large file parsing test: fixed recursion depth issue by testing size-limit skip behavior
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)
