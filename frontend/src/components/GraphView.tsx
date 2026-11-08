@@ -39,7 +39,7 @@ export function GraphView({ jobId, summary, onBack }: GraphViewProps) {
   const [filterType, setFilterType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const nodeTypes = ['all', 'module', 'class', 'function', 'method', 'import', 'interface', 'type_alias', 'enum', 'namespace'];
+  const nodeTypes = ['all', 'module', 'class', 'function', 'method', 'import', 'interface', 'type_alias', 'enum', 'namespace', 'external'];
 
   useEffect(() => {
     let cy: Core | null = null;
@@ -130,6 +130,10 @@ export function GraphView({ jobId, summary, onBack }: GraphViewProps) {
           {
             selector: 'node[type="namespace"]',
             style: { 'background-color': '#8e44ad', 'shape': 'tag' } as cytoscape.Css.Node,
+          },
+          {
+            selector: 'node[type="external"]',
+            style: { 'background-color': '#95a5a6', 'shape': 'vee' } as cytoscape.Css.Node,
           },
           {
             selector: 'node:selected',

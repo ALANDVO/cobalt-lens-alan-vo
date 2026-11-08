@@ -211,6 +211,8 @@ class TestASTParser:
         nodes, edges = parser.parse_file(temp_python_file, job_id=1)
 
         for node in nodes:
+            if node.node_type == NodeType.EXTERNAL:
+                continue  # External nodes have no source location
             assert node.file_path == str(temp_python_file)
             assert node.language == "python"
             assert node.line_start > 0
