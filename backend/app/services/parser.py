@@ -32,6 +32,9 @@ class ASTParser:
         for ext, (lang, _) in LANGUAGE_MAP.items():
             parser = Parser(lang)
             self.parsers[ext] = parser
+        # Cache for external nodes to avoid duplicates
+        self.external_nodes: dict[str, int] = {}
+        self.external_node_map: dict[str, NodeCreate] = {}
 
     def parse_file(self, file_path: Path, job_id: int) -> tuple[list[NodeCreate], list[EdgeCreate]]:
         ext = file_path.suffix
@@ -56,12 +59,47 @@ class ASTParser:
         edges: list[EdgeCreate] = []
         node_id_map: dict[int, int] = {}
 
+        # Reset external node cache per file
+        self.external_nodes.clear()
+        self.external_node_map.clear()
+
         if language_name == "python":
             self._parse_python(root_node, content, file_path, job_id, nodes, edges, node_id_map)
         elif language_name in ("javascript", "typescript"):
-            self._parse_js_ts(root_node, content, file_path, job_id, nodes, edges, node_id_map, language_name)
+            self._parse_js_ts(root_node, content, file_path, job_id, language_name, nodes, edges, node_id_map)
+
+        # Add external nodes to the node list
+        for ext_node in self.external_node_map.values():
+            nodes.append(ext_node)
 
         return nodes, edges
+
+    def _get_or_create_external_node(self, nodes: list, name: str, qualified_name: str,
+                                      file_path: Path, language: str, ref_type: str,
+                                      metadata: Optional[dict] = None) -> int:
+        """Get or create an external node for unresolved references."""
+        cache_key = f"{qualified_name}:{ref_type}"
+        if cache_key in self.external_nodes:
+            return self.external_nodes[cache_key]
+
+        # Create external node
+        ext_node = NodeCreate(
+            node_type=NodeType.EXTERNAL,
+            name=name,
+            qualified_name=qualified_name,
+            file_path=str(file_path),
+            line_start=0,
+            line_end=0,
+            column_start=0,
+            column_end=0,
+            language=language,
+            metadata={"ref_type": ref_type, **(metadata or {})},
+        )
+        # Store in map (will be added to nodes list at the end)
+        node_idx = len(nodes) + len(self.external_node_map)
+        self.external_nodes[cache_key] = node_idx
+        self.external_node_map[cache_key] = ext_node
+        return node_idx
 
     def _get_node_text(self, node: TSNode, content: str) -> str:
         return content[node.start_byte:node.end_byte]
@@ -120,7 +158,7 @@ class ASTParser:
                     edges.append(EdgeCreate(source_id=parent_idx, target_id=node_idx,
                                             edge_type=EdgeType.CONTAINS))
 
-            self._extract_python_calls(node, content, node_idx, edges, node_id_map)
+            self._extract_python_calls(node, content, node_idx, nodes, edges, node_id_map, "python")
 
         elif node.type == "class_definition":
             name = self._get_class_name(node, content)
@@ -129,7 +167,12 @@ class ASTParser:
                                       file_path, "python", {"bases": self._get_class_bases(node, content)})
 
             for base in self._get_class_bases(node, content):
-                edges.append(EdgeCreate(source_id=node_idx, target_id=-1,
+                base_qualified = f"{parent_qualified}.{base}" if parent_qualified else base
+                base_idx = self._get_or_create_external_node(
+                    nodes, base, base_qualified, file_path, "python", "base_class",
+                    {"base_class": base}
+                )
+                edges.append(EdgeCreate(source_id=node_idx, target_id=base_idx,
                                         edge_type=EdgeType.INHERITS,
                                         metadata={"base_class": base}))
 
@@ -147,7 +190,12 @@ class ASTParser:
                 node_idx = self._add_node(nodes, node_id_map, node, NodeType.IMPORT, imp_name, qualified,
                                           file_path, "python", {"module": imp.get("module"), "alias": imp.get("alias")})
                 if imp.get("module"):
-                    edges.append(EdgeCreate(source_id=node_idx, target_id=-1,
+                    mod_qualified = imp["module"]
+                    mod_idx = self._get_or_create_external_node(
+                        nodes, imp_name, mod_qualified, file_path, "python", "imported_module",
+                        {"module": imp["module"], "alias": imp.get("alias")}
+                    )
+                    edges.append(EdgeCreate(source_id=node_idx, target_id=mod_idx,
                                             edge_type=EdgeType.IMPORTS,
                                             metadata={"module": imp["module"]}))
 
@@ -228,17 +276,22 @@ class ASTParser:
                                 imports.append({"name": imp_name, "module": module, "alias": alias})
         return imports
 
-    def _extract_python_calls(self, node: TSNode, content: str, caller_idx: int,
-                              edges: list, node_id_map: dict):
+    def _extract_python_calls(self, node: TSNode, content: str, caller_idx: int, nodes: list,
+                              edges: list, node_id_map: dict, language: str):
         for child in node.children:
             if child.type == "call":
                 for gc in child.children:
                     if gc.type in ("identifier", "attribute"):
                         callee_name = self._get_node_text(gc, content)
-                        edges.append(EdgeCreate(source_id=caller_idx, target_id=-1,
+                        callee_qualified = callee_name  # Could be more sophisticated
+                        callee_idx = self._get_or_create_external_node(
+                            nodes, callee_name, callee_qualified, Path(""), "python", "called_function",
+                            {"callee": callee_name}
+                        )
+                        edges.append(EdgeCreate(source_id=caller_idx, target_id=callee_idx,
                                                 edge_type=EdgeType.CALLS,
                                                 metadata={"callee": callee_name}))
-            self._extract_python_calls(child, content, caller_idx, edges, node_id_map)
+            self._extract_python_calls(child, content, caller_idx, nodes, edges, node_id_map, language)
 
     def _find_parent_class(self, node: TSNode, node_id_map: dict) -> Optional[int]:
         parent = node.parent
@@ -248,8 +301,7 @@ class ASTParser:
             parent = parent.parent
         return None
 
-    def _parse_js_ts(self, root: TSNode, content: str, file_path: Path, job_id: int,
-                     nodes: list, edges: list, node_id_map: dict, language: str):
+    def _parse_js_ts(self, root: TSNode, content: str, file_path: Path, job_id: int, language: str, nodes: list, edges: list, node_id_map: dict):
         module_name = file_path.stem
         self._add_node(nodes, node_id_map, root, NodeType.MODULE, module_name, module_name,
                        file_path, language)
@@ -275,7 +327,7 @@ class ASTParser:
                     edges.append(EdgeCreate(source_id=parent_idx, target_id=node_idx,
                                             edge_type=EdgeType.CONTAINS))
 
-            self._extract_js_calls(node, content, node_idx, edges, node_id_map)
+            self._extract_js_calls(node, content, node_idx, nodes, edges, node_id_map, language)
 
         elif node.type in ("class_declaration", "class_expression"):
             name = self._get_js_class_name(node, content)
@@ -285,13 +337,23 @@ class ASTParser:
 
             extends = self._get_js_extends(node, content)
             if extends:
-                edges.append(EdgeCreate(source_id=node_idx, target_id=-1,
+                ext_qualified = f"{parent_qualified}.{extends}" if parent_qualified else extends
+                ext_idx = self._get_or_create_external_node(
+                    nodes, extends, ext_qualified, file_path, language, "base_class",
+                    {"base_class": extends}
+                )
+                edges.append(EdgeCreate(source_id=node_idx, target_id=ext_idx,
                                         edge_type=EdgeType.INHERITS,
                                         metadata={"base_class": extends}))
 
             implements = self._get_js_implements(node, content)
             for impl in implements:
-                edges.append(EdgeCreate(source_id=node_idx, target_id=-1,
+                impl_qualified = f"{parent_qualified}.{impl}" if parent_qualified else impl
+                impl_idx = self._get_or_create_external_node(
+                    nodes, impl, impl_qualified, file_path, language, "implemented_interface",
+                    {"interface": impl}
+                )
+                edges.append(EdgeCreate(source_id=node_idx, target_id=impl_idx,
                                         edge_type=EdgeType.IMPLEMENTS,
                                         metadata={"interface": impl}))
 
@@ -309,7 +371,12 @@ class ASTParser:
                 node_idx = self._add_node(nodes, node_id_map, node, NodeType.IMPORT, imp_name, qualified,
                                           file_path, language, {"module": imp.get("module"), "alias": imp.get("alias")})
                 if imp.get("module"):
-                    edges.append(EdgeCreate(source_id=node_idx, target_id=-1,
+                    mod_qualified = imp["module"]
+                    mod_idx = self._get_or_create_external_node(
+                        nodes, imp_name, mod_qualified, file_path, language, "imported_module",
+                        {"module": imp["module"], "alias": imp.get("alias")}
+                    )
+                    edges.append(EdgeCreate(source_id=node_idx, target_id=mod_idx,
                                             edge_type=EdgeType.IMPORTS,
                                             metadata={"module": imp["module"]}))
 
@@ -423,17 +490,21 @@ class ASTParser:
                 return self._get_node_text(child, content)
         return "<anonymous>"
 
-    def _extract_js_calls(self, node: TSNode, content: str, caller_idx: int,
-                          edges: list, node_id_map: dict):
+    def _extract_js_calls(self, node: TSNode, content: str, caller_idx: int, nodes: list, edges: list, node_id_map: dict, language: str):
         if node.type == "call_expression":
             for child in node.children:
                 if child.type in ("identifier", "member_expression", "property_identifier"):
                     callee_name = self._get_node_text(child, content)
-                    edges.append(EdgeCreate(source_id=caller_idx, target_id=-1,
+                    callee_qualified = callee_name
+                    callee_idx = self._get_or_create_external_node(
+                        nodes, callee_name, callee_qualified, Path(""), language, "called_function",
+                        {"callee": callee_name}
+                    )
+                    edges.append(EdgeCreate(source_id=caller_idx, target_id=callee_idx,
                                             edge_type=EdgeType.CALLS,
                                             metadata={"callee": callee_name}))
         for child in node.children:
-            self._extract_js_calls(child, content, caller_idx, edges, node_id_map)
+            self._extract_js_calls(child, content, caller_idx, nodes, edges, node_id_map, language)
 
     def _find_parent_class(self, node: TSNode, node_id_map: dict) -> Optional[int]:
         parent = node.parent

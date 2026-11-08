@@ -10,12 +10,11 @@ class NodeType(str, Enum):
     FUNCTION = "function"
     METHOD = "method"
     IMPORT = "import"
-    VARIABLE = "variable"
-    DECORATOR = "decorator"
     INTERFACE = "interface"
     TYPE_ALIAS = "type_alias"
     ENUM = "enum"
     NAMESPACE = "namespace"
+    EXTERNAL = "external"
 
 
 class EdgeType(str, Enum):
