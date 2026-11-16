@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+\"\"\"CLI entry for /graphify skill.\"\"\"
+import sys
+print(\"CLI tool not yet implemented; use REST API at /api/v1/parse\") +x backend/app/cli.pyn
