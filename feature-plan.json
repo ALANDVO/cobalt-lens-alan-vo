@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "core-ast-parser",
+  "current_feature": "cli-skill",
   "features": [
     {
       "id": "core-ast-parser",
@@ -63,14 +63,18 @@
     {
       "id": "cli-skill",
       "title": "CLI /graphify Skill Integration",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "CLI command to parse a directory and output graph",
         "Integration with Claude Code, Cursor, Codex, Gemini CLI",
         "Configurable output formats"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "backend/app/cli.py"
+      ],
+      "tests": [
+        "backend/tests/test_cli.py"
+      ]
     },
     {
       "id": "sql-config-parsers",

@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-core-ast-parser
+cli-skill
 
 ## Roadmap
 
@@ -51,12 +51,16 @@ Tests: `frontend/typecheck via tsc`
 
 ### cli-skill — CLI /graphify Skill Integration
 
-Status: planned
+Status: done
 
 Acceptance:
 - CLI command to parse a directory and output graph
 - Integration with Claude Code, Cursor, Codex, Gemini CLI
 - Configurable output formats
+
+Implementation: `backend/app/cli.py`
+
+Tests: `backend/tests/test_cli.py`
 
 ### sql-config-parsers — SQL Schema & Config File Parsers
 
