@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "cli-skill",
+  "current_feature": "sql-config-parsers",
   "features": [
     {
       "id": "core-ast-parser",
@@ -79,7 +79,7 @@
     {
       "id": "sql-config-parsers",
       "title": "SQL Schema & Config File Parsers",
-      "status": "planned",
+      "status": "in_progress",
       "acceptance": [
         "Parse SQL DDL for tables, columns, FK relationships",
         "Parse YAML/JSON/TOML configs as structured nodes",

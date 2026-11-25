@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-cli-skill
+sql-config-parsers
 
 ## Roadmap
 
@@ -64,7 +64,7 @@ Tests: `backend/tests/test_cli.py`
 
 ### sql-config-parsers — SQL Schema & Config File Parsers
 
-Status: planned
+Status: in_progress
 
 Acceptance:
 - Parse SQL DDL for tables, columns, FK relationships
